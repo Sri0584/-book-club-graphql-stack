@@ -1,0 +1,26 @@
+{
+  "name": "book-club-platform",
+  "private": true,
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w server & npm run dev -w client",
+    "build": "npm run build -w server && npm run build -w client",
+    "typecheck": "npm run typecheck -w server && npm run typecheck -w client",
+    "lint": "npm run lint -w server && npm run lint -w client",
+    "prisma:generate": "npm run prisma:generate -w server",
+    "prisma:migrate": "npm run prisma:migrate -w server",
+    "prisma:seed": "npm run prisma:seed -w server",
+    "codegen": "npm run codegen:server && npm run codegen:client",
+    "codegen:server": "cd server && graphql-codegen --config codegen.yml",
+    "codegen:client": "cd client && graphql-codegen --config codegen.yml"
+  },
+  "devDependencies": {
+    "@graphql-codegen/cli": "^5.0.3",
+    "@graphql-codegen/typescript": "^4.1.2",
+    "@graphql-codegen/typescript-operations": "^4.4.0",
+    "@graphql-codegen/typescript-resolvers": "^4.4.1"
+  }
+}
