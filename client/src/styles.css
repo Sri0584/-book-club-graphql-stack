@@ -1,0 +1,41 @@
+:root {
+  color: #1f2937;
+  background: #f8f5ef;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body { margin: 0; }
+button, input { font: inherit; }
+
+.app-shell { max-width: 1180px; margin: 0 auto; padding: 32px; }
+.hero { background: #263238; color: white; border-radius: 28px; padding: 40px; margin-bottom: 28px; box-shadow: 0 20px 50px #0002; }
+.hero h1 { max-width: 780px; font-size: clamp(2rem, 5vw, 4rem); line-height: 1; margin: 8px 0 16px; }
+.hero p { max-width: 760px; color: #dbeafe; }
+.eyebrow { color: #f97316; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; font-size: .78rem; }
+.grid-layout { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 24px; align-items: start; }
+.section-header { display: flex; align-items: center; justify-content: space-between; }
+.book-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; }
+.book-card, .chat-panel, .recommendations { background: white; border: 1px solid #eadfd0; border-radius: 20px; padding: 20px; box-shadow: 0 10px 30px #3f2f190d; }
+.book-card { cursor: pointer; transition: transform .2s ease, box-shadow .2s ease; }
+.book-card:hover { transform: translateY(-4px); box-shadow: 0 18px 35px #3f2f1920; }
+.book-card h3 { margin: 0; font-size: 1.35rem; }
+.book-card small { display: block; color: #6b7280; margin-top: 10px; }
+.reviews { display: grid; gap: 8px; margin-top: 12px; }
+blockquote { margin: 0; padding-left: 12px; border-left: 3px solid #f97316; color: #4b5563; }
+.load-more { text-align: center; color: #6b7280; padding: 24px; }
+.chat-panel { position: sticky; top: 24px; }
+.hint { color: #6b7280; font-size: .92rem; }
+.messages { display: grid; gap: 10px; max-height: 320px; overflow: auto; margin: 18px 0; }
+.message { display: grid; gap: 3px; background: #f8f5ef; border-radius: 14px; padding: 12px; }
+.chat-form { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+.chat-form input { border: 1px solid #d1d5db; border-radius: 999px; padding: 10px 14px; }
+.chat-form button { border: 0; border-radius: 999px; padding: 10px 16px; background: #f97316; color: white; font-weight: 700; }
+.recommendations { margin-top: 18px; }
+.recommendation { display: grid; gap: 2px; border-top: 1px solid #f1e5d8; padding: 12px 0; }
+.error { color: #b91c1c; font-weight: 700; }
+
+@media (max-width: 900px) {
+  .app-shell { padding: 18px; }
+  .grid-layout { grid-template-columns: 1fr; }
+  .chat-panel { position: static; }
+}
