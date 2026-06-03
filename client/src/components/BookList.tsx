@@ -1,77 +1,113 @@
-import { useEffect, useRef, useState } from 'react';
-import { useQuery } from '@apollo/client';
-import { BOOKS_QUERY } from '../graphql/queries';
-import type { BooksQuery, BooksQueryVariables } from '../graphql/generated';
-import type { AuthUser } from './AuthPanel';
-import { DiscussionChat } from './DiscussionChat';
+import { useEffect, useRef, useState } from "react";
+import { useQuery } from "@apollo/client";
+import { BOOKS_QUERY } from "../graphql/queries";
+import type { BooksQuery, BooksQueryVariables } from "../graphql/generated";
+import type { AuthUser } from "./AuthPanel";
+import { DiscussionChat } from "./DiscussionChat";
 
 export function BookList({ authUser }: { authUser: AuthUser | null }) {
-  const [activeBookId, setActiveBookId] = useState<string | null>(null);
-  const loadMoreRef = useRef<HTMLDivElement | null>(null);
-  const { data, loading, error, fetchMore } = useQuery<BooksQuery, BooksQueryVariables>(BOOKS_QUERY, {
-    variables: { first: 6, after: null, search: null },
-    notifyOnNetworkStatusChange: true
-  });
+	const [activeBookId, setActiveBookId] = useState<string | null>(null);
+	const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
-  useEffect(() => {
-    const target = loadMoreRef.current;
-    if (!target || !data?.books.pageInfo.hasNextPage) return;
-    const observer = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting) {
-        void fetchMore({ variables: { after: data.books.pageInfo.endCursor } });
-      }
-    });
-    observer.observe(target);
-    return () => observer.disconnect();
-  }, [data?.books.pageInfo.endCursor, data?.books.pageInfo.hasNextPage, fetchMore]);
+	const { data, loading, error, fetchMore } = useQuery<
+		BooksQuery,
+		BooksQueryVariables
+	>(BOOKS_QUERY, {
+		variables: { first: 3 },
+		fetchPolicy: "network-only",
+	});
+	const pageInfo = data?.books?.pageInfo ?? {
+		endCursor: null,
+		hasNextPage: false,
+	};
+	useEffect(() => {
+		const target = loadMoreRef.current;
+		if (!target || !data?.books.pageInfo.hasNextPage) return;
+		const observer = new IntersectionObserver(([entry]) => {
+			if (entry.isIntersecting && data.books?.pageInfo?.endCursor) {
+				void fetchMore({
+					variables: { after: pageInfo?.endCursor },
+				});
+			}
+		});
+		observer.observe(target);
+		return () => observer.disconnect();
+	}, [pageInfo.endCursor, pageInfo.hasNextPage, fetchMore]);
 
-  if (error) return <p className="error">{error.message}</p>;
+	if (error) return <p className='error'>{error.message}</p>;
+	if (loading) return <div>Loading...</div>;
+	if (!data?.books) return <div>No data</div>;
 
-  const books = data?.books.edges.map((edge) => edge.node) ?? [];
-  const activeBook = books.find((book) => book.id === activeBookId) ?? books[0];
+	const books = data?.books.edges.map((edge) => edge.node) ?? [];
 
-  return (
-    <section className="grid-layout">
-      <div>
-        <div className="section-header">
-          <h2>Current club reads</h2>
-          {loading ? <span>Loading…</span> : null}
-        </div>
-        <div className="book-grid">
-          {books.map((book) => (
-            <article key={book.id} className="book-card" onClick={() => setActiveBookId(book.id)}>
-              <p className="eyebrow">{book.genre}</p>
-              <h3>{book.title}</h3>
-              <p>by {book.author}</p>
-              <p>{book.description}</p>
-              <strong>{book.averageRating ? `${book.averageRating.toFixed(1)} ★` : 'No ratings yet'}</strong>
-              <small>Added by {book.owner.name}</small>
-              <div className="reviews">
-                {book.reviews.edges.map(({ node }) => (
-                  <blockquote key={node.id}>{node.body} — {node.user.name}</blockquote>
-                ))}
-              </div>
-            </article>
-          ))}
-        </div>
-        <div ref={loadMoreRef} className="load-more">
-          {data?.books.pageInfo.hasNextPage ? 'Scroll for more books…' : 'You reached the end.'}
-        </div>
-      </div>
+	const activeBook =
+		books.find((book) => book?.id === activeBookId) ?? books[0];
 
-      <aside>
-        {activeBook ? <DiscussionChat bookId={activeBook.id} title={activeBook.title} authUser={authUser} /> : null}
-        <div className="recommendations">
-          <h2>Lazy recommendations</h2>
-          <p className="hint">Loaded through a deferred GraphQL fragment when the server supports incremental delivery.</p>
-          {(data?.recommendations ?? []).map((book) => (
-            <div key={book.id} className="recommendation">
-              <strong>{book.title}</strong>
-              <span>{book.author}</span>
-            </div>
-          ))}
-        </div>
-      </aside>
-    </section>
-  );
+	return (
+		<section className='grid-layout'>
+			<div>
+				<div className='section-header'>
+					<h2>Current club reads</h2>
+					{loading ?
+						<span>Loading…</span>
+					:	null}
+				</div>
+				<div className='book-grid'>
+					{books.map((book) => (
+						<article
+							key={book.id}
+							className='book-card'
+							onClick={() => setActiveBookId(book.id)}
+						>
+							<p className='eyebrow'>{book.genre}</p>
+							<h3>{book.title}</h3>
+							<p>by {book.author}</p>
+							<p>{book.description}</p>
+							<strong>
+								{book.averageRating ?
+									`${book.averageRating.toFixed(1)} ★`
+								:	"No ratings yet"}
+							</strong>
+							<small>Added by {book.owner.name}</small>
+							<div className='reviews'>
+								{book.reviews.edges.map(({ node }) => (
+									<blockquote key={node.id}>
+										{node.body} — {node.user.name}
+									</blockquote>
+								))}
+							</div>
+						</article>
+					))}
+				</div>
+				<div ref={loadMoreRef} className='load-more'>
+					{data?.books.pageInfo.hasNextPage ?
+						"Scroll for more books…"
+					:	"You reached the end."}
+				</div>
+			</div>
+
+			<aside>
+				{activeBook ?
+					<DiscussionChat
+						bookId={activeBook.id}
+						title={activeBook.title}
+						authUser={authUser}
+					/>
+				:	null}
+				<div className='recommendations'>
+					<h2>Lazy recommendations</h2>
+					<p className='hint'>
+						Loaded through a deferred GraphQL fragment when the server supports
+						incremental delivery.
+					</p>
+					{(data?.recommendations ?? []).map((book) => (
+						<div key={book.id} className='recommendation'>
+							<strong>{book.title}</strong>
+							<span>{book.author}</span>
+						</div>
+					))}
+				</div>
+			</aside>
+		</section>
+	);
 }
