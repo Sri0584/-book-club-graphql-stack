@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String        @id @default(uuid()) @db.Uuid
+  name         String        @db.VarChar(120)
+  email        String        @unique @db.VarChar(320)
+  passwordHash String        @map("password_hash")
+  avatarUrl    String?       @map("avatar_url") @db.Text
+  createdAt    DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  books        Book[]        @relation("BookOwner")
+  reviews      Review[]
+  ratings      Rating[]
+  chatMessages ChatMessage[]
+
+  @@map("users")
+}
+
+model Book {
+  id           String        @id @default(uuid()) @db.Uuid
+  ownerId      String        @map("owner_id") @db.Uuid
+  title        String        @db.VarChar(240)
+  author       String        @db.VarChar(180)
+  description  String        @default("") @db.Text
+  coverUrl     String?       @map("cover_url") @db.Text
+  genre        String        @default("General") @db.VarChar(80)
+  createdAt    DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  owner        User          @relation("BookOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  reviews      Review[]
+  ratings      Rating[]
+  chatMessages ChatMessage[]
+
+  @@index([createdAt(sort: Desc), id(sort: Desc)], map: "idx_books_created_id")
+  @@map("books")
+}
+
+model Review {
+  id        String   @id @default(uuid()) @db.Uuid
+  bookId    String   @map("book_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  body      String   @db.VarChar(2000)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  book      Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([bookId, createdAt(sort: Desc), id(sort: Desc)], map: "idx_reviews_book_created_id")
+  @@map("reviews")
+}
+
+model Rating {
+  id        String   @id @default(uuid()) @db.Uuid
+  bookId    String   @map("book_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  score     Int
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  book      Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([bookId, userId], map: "ratings_bookId_userId_key")
+  @@index([bookId], map: "idx_ratings_book")
+  @@map("ratings")
+}
+
+model ChatMessage {
+  id        String   @id @default(uuid()) @db.Uuid
+  bookId    String   @map("book_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  message   String   @db.VarChar(1000)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  book      Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([bookId, createdAt(sort: Desc), id(sort: Desc)], map: "idx_chat_book_created_id")
+  @@map("chat_messages")
+}
