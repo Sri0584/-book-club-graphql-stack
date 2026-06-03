@@ -10,6 +10,7 @@ A full-stack book club platform using React, Apollo Client, Node.js, Apollo Serv
 - JWT authentication and ownership-aware mutations
 - GraphQL validation and query complexity protection
 - Prisma Client database access backed by PostgreSQL
+- GraphQL Code Generator types for server resolvers and client operations
 - DataLoaders to avoid N+1 database queries
 - Frontend GraphQL fragment reuse
 - `@defer` usage for lazy-loading recommendations from the client query
@@ -55,3 +56,9 @@ book-club-platform/
 - The canonical database model lives in `server/prisma/schema.prisma`.
 - Generate Prisma Client after dependency changes with `npm run prisma:generate -w server`.
 - Use `npm run prisma:migrate -w server` for local migrations and `npm run prisma:seed -w server` to load sample book club data.
+
+## GraphQL type generation
+
+- Server resolver types are generated from `server/src/graphql/schema.ts` into `server/src/graphql/generated.ts`.
+- Client operation and fragment types are generated from `client/src/graphql/**/*` into `client/src/graphql/generated.ts`.
+- Run `npm run codegen` after schema or operation changes so TypeScript stays aligned with GraphQL.

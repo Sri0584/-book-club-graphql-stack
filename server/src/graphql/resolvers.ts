@@ -5,6 +5,7 @@ import { comparePassword, hashPassword, requireUser, signToken } from '../auth/j
 import { prisma } from '../db/prisma.js';
 import { decodeCursor, encodeCursor, normalizeLimit } from './cursor.js';
 import type { GraphQLContext } from './context.js';
+import type { Resolvers } from './generated.js';
 import type { CursorArgs } from './types.js';
 
 const pubsub = new PubSub();
@@ -27,6 +28,13 @@ function assertScore(score?: number | null) {
   if (score != null && (!Number.isInteger(score) || score < 1 || score > 5)) {
     throw new GraphQLError('score must be an integer between 1 and 5.', { extensions: { code: 'BAD_USER_INPUT' } });
   }
+}
+
+function requireEntity<T>(entity: T | null | undefined, message: string) {
+  if (!entity) {
+    throw new GraphQLError(message, { extensions: { code: 'NOT_FOUND' } });
+  }
+  return entity;
 }
 
 function connection<T extends CursorNode>(rows: T[], limit: number) {
@@ -94,7 +102,7 @@ async function chatMessageConnection(bookId: string, args: CursorArgs) {
   return connection(rows, limit);
 }
 
-async function recommendedBooks(user: User | null, limit?: number) {
+async function recommendedBooks(user: User | null, limit?: number | null) {
   const safeLimit = normalizeLimit(limit, 5, 10);
   const excludedBookIds = user
     ? (await prisma.rating.findMany({ where: { userId: user.id }, select: { bookId: true } })).map((rating) => rating.bookId)
@@ -125,7 +133,7 @@ async function recommendedBooks(user: User | null, limit?: number) {
   return recommendations.slice(0, safeLimit);
 }
 
-export const resolvers = {
+export const resolvers: Resolvers = {
   DateTime: new GraphQLScalarType({
     name: 'DateTime',
     serialize(value) {
@@ -144,7 +152,7 @@ export const resolvers = {
     users: async () => prisma.user.findMany({ orderBy: [{ createdAt: 'desc' }, { id: 'desc' }] }),
     book: async (_: unknown, { id }: { id: string }) => prisma.book.findUnique({ where: { id } }),
     books: async (_: unknown, args: CursorArgs & { search?: string | null }) => bookConnection(args),
-    recommendations: async (_: unknown, { limit = 5 }: { limit?: number }, context: GraphQLContext) => recommendedBooks(context.user, limit),
+    recommendations: async (_: unknown, { limit = 5 }: { limit?: number | null }, context: GraphQLContext) => recommendedBooks(context.user, limit),
     chatMessages: async (_: unknown, args: CursorArgs & { bookId: string }) => chatMessageConnection(args.bookId, args)
   },
 
@@ -169,7 +177,7 @@ export const resolvers = {
       }
       return { token: await signToken(user), user };
     },
-    createBook: async (_: unknown, { input }: { input: { title: string; author: string; description: string; coverUrl?: string; genre: string } }, context: GraphQLContext) => {
+    createBook: async (_: unknown, { input }: { input: { title: string; author: string; description: string; coverUrl?: string | null; genre: string } }, context: GraphQLContext) => {
       const user = requireUser(context.user);
       return prisma.book.create({
         data: {
@@ -182,7 +190,7 @@ export const resolvers = {
         }
       });
     },
-    addReview: async (_: unknown, { input }: { input: { bookId: string; body: string; score?: number } }, context: GraphQLContext) => {
+    addReview: async (_: unknown, { input }: { input: { bookId: string; body: string; score?: number | null } }, context: GraphQLContext) => {
       const user = requireUser(context.user);
       assertScore(input.score);
       try {
@@ -231,7 +239,8 @@ export const resolvers = {
 
   Book: {
     createdAt: (book: Book) => book.createdAt,
-    owner: async (book: Book, _: unknown, context: GraphQLContext) => context.loaders.usersById.load(book.ownerId),
+    owner: async (book: Book, _: unknown, context: GraphQLContext) =>
+      requireEntity(await context.loaders.usersById.load(book.ownerId), 'Book owner was not found.'),
     reviews: async (book: Book, args: CursorArgs) => reviewConnection(book.id, args),
     ratings: (book: Book, _: unknown, context: GraphQLContext) => context.loaders.ratingsByBookId.load(book.id),
     averageRating: async (book: Book, _: unknown, context: GraphQLContext) => {
@@ -242,19 +251,25 @@ export const resolvers = {
 
   Review: {
     createdAt: (review: Review) => review.createdAt,
-    user: (review: Review, _: unknown, context: GraphQLContext) => context.loaders.usersById.load(review.userId),
-    book: (review: Review, _: unknown, context: GraphQLContext) => context.loaders.booksById.load(review.bookId)
+    user: async (review: Review, _: unknown, context: GraphQLContext) =>
+      requireEntity(await context.loaders.usersById.load(review.userId), 'Review author was not found.'),
+    book: async (review: Review, _: unknown, context: GraphQLContext) =>
+      requireEntity(await context.loaders.booksById.load(review.bookId), 'Review book was not found.')
   },
 
   Rating: {
     createdAt: (rating: Rating) => rating.createdAt,
-    user: (rating: Rating, _: unknown, context: GraphQLContext) => context.loaders.usersById.load(rating.userId),
-    book: (rating: Rating, _: unknown, context: GraphQLContext) => context.loaders.booksById.load(rating.bookId)
+    user: async (rating: Rating, _: unknown, context: GraphQLContext) =>
+      requireEntity(await context.loaders.usersById.load(rating.userId), 'Rating author was not found.'),
+    book: async (rating: Rating, _: unknown, context: GraphQLContext) =>
+      requireEntity(await context.loaders.booksById.load(rating.bookId), 'Rating book was not found.')
   },
 
   ChatMessage: {
     createdAt: (message: ChatMessage) => message.createdAt,
-    user: (message: ChatMessage, _: unknown, context: GraphQLContext) => context.loaders.usersById.load(message.userId),
-    book: (message: ChatMessage, _: unknown, context: GraphQLContext) => context.loaders.booksById.load(message.bookId)
+    user: async (message: ChatMessage, _: unknown, context: GraphQLContext) =>
+      requireEntity(await context.loaders.usersById.load(message.userId), 'Chat message author was not found.'),
+    book: async (message: ChatMessage, _: unknown, context: GraphQLContext) =>
+      requireEntity(await context.loaders.booksById.load(message.bookId), 'Chat message book was not found.')
   }
 };

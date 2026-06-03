@@ -1,31 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@apollo/client';
 import { BOOKS_QUERY } from '../graphql/queries';
+import type { BooksQuery, BooksQueryVariables } from '../graphql/generated';
 import { DiscussionChat } from './DiscussionChat';
-
-type Book = {
-  id: string;
-  title: string;
-  author: string;
-  description: string;
-  genre: string;
-  averageRating: number | null;
-  owner: { name: string };
-  reviews: { edges: { node: { id: string; body: string; user: { name: string } } }[] };
-};
-
-type BooksData = {
-  books: {
-    edges: { cursor: string; node: Book }[];
-    pageInfo: { endCursor: string | null; hasNextPage: boolean };
-  };
-  recommendations?: Book[];
-};
 
 export function BookList() {
   const [activeBookId, setActiveBookId] = useState<string | null>(null);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
-  const { data, loading, error, fetchMore } = useQuery<BooksData>(BOOKS_QUERY, {
+  const { data, loading, error, fetchMore } = useQuery<BooksQuery, BooksQueryVariables>(BOOKS_QUERY, {
     variables: { first: 6, after: null, search: null },
     notifyOnNetworkStatusChange: true
   });

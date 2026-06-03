@@ -3,30 +3,24 @@ import { useMutation, useQuery } from '@apollo/client';
 import { CHAT_MESSAGES_QUERY } from '../graphql/queries';
 import { SEND_CHAT_MESSAGE_MUTATION } from '../graphql/mutations';
 import { CHAT_MESSAGE_ADDED_SUBSCRIPTION } from '../graphql/subscriptions';
-
-type ChatMessage = {
-  id: string;
-  message: string;
-  createdAt: string;
-  user: { name: string };
-};
-
-type ChatData = {
-  chatMessages: {
-    edges: { cursor: string; node: ChatMessage }[];
-    pageInfo: { endCursor: string | null; hasNextPage: boolean };
-  };
-};
+import type {
+  ChatMessageAddedSubscription,
+  ChatMessageAddedSubscriptionVariables,
+  ChatMessagesQuery,
+  ChatMessagesQueryVariables,
+  SendChatMessageMutation,
+  SendChatMessageMutationVariables
+} from '../graphql/generated';
 
 export function DiscussionChat({ bookId, title }: { bookId: string; title: string }) {
   const [message, setMessage] = useState('');
-  const { data, error, subscribeToMore } = useQuery<ChatData>(CHAT_MESSAGES_QUERY, {
+  const { data, error, subscribeToMore } = useQuery<ChatMessagesQuery, ChatMessagesQueryVariables>(CHAT_MESSAGES_QUERY, {
     variables: { bookId, first: 20, after: null }
   });
-  const [sendChatMessage, { loading }] = useMutation(SEND_CHAT_MESSAGE_MUTATION);
+  const [sendChatMessage, { loading }] = useMutation<SendChatMessageMutation, SendChatMessageMutationVariables>(SEND_CHAT_MESSAGE_MUTATION);
 
   useEffect(() => {
-    return subscribeToMore({
+    return subscribeToMore<ChatMessageAddedSubscription, ChatMessageAddedSubscriptionVariables>({
       document: CHAT_MESSAGE_ADDED_SUBSCRIPTION,
       variables: { bookId },
       updateQuery(previous, { subscriptionData }) {
