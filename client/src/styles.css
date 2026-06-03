@@ -39,3 +39,15 @@ blockquote { margin: 0; padding-left: 12px; border-left: 3px solid #f97316; colo
   .grid-layout { grid-template-columns: 1fr; }
   .chat-panel { position: static; }
 }
+.auth-panel { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); align-items: end; background: white; border: 1px solid #eadfd0; border-radius: 20px; padding: 18px; margin-bottom: 24px; box-shadow: 0 10px 30px #3f2f190d; }
+.auth-panel label { display: grid; gap: 6px; color: #4b5563; font-weight: 700; }
+.auth-panel input { border: 1px solid #d1d5db; border-radius: 12px; padding: 10px 12px; }
+.auth-panel button { border: 0; border-radius: 999px; padding: 10px 16px; background: #263238; color: white; font-weight: 800; cursor: pointer; }
+.auth-panel button:disabled { opacity: .65; cursor: not-allowed; }
+.auth-panel.signed-in { grid-template-columns: 1fr auto; }
+.auth-panel.signed-in div { display: grid; gap: 2px; }
+.auth-panel.signed-in span { color: #6b7280; }
+.auth-mode-toggle { display: flex; gap: 8px; }
+.auth-mode-toggle button { flex: 1; background: #e5e7eb; color: #374151; }
+.auth-mode-toggle button.active { background: #f97316; color: white; }
+.chat-auth-notice { border: 1px dashed #f97316; border-radius: 14px; color: #9a3412; margin: 0; padding: 12px; text-align: center; }

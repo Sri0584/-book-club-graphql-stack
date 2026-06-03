@@ -51,6 +51,8 @@ book-club-platform/
 - API: <http://localhost:4000/graphql>
 - Client: <http://localhost:5173>
 
+Seeded users can sign in from the React auth panel with password `password123` (for example `ada@example.com`). The client stores the returned JWT in `localStorage` as `bookClubToken` before sending protected chat mutations.
+
 ## Prisma workflow
 
 - The canonical database model lives in `server/prisma/schema.prisma`.

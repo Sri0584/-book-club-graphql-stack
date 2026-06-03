@@ -2,9 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@apollo/client';
 import { BOOKS_QUERY } from '../graphql/queries';
 import type { BooksQuery, BooksQueryVariables } from '../graphql/generated';
+import type { AuthUser } from './AuthPanel';
 import { DiscussionChat } from './DiscussionChat';
 
-export function BookList() {
+export function BookList({ authUser }: { authUser: AuthUser | null }) {
   const [activeBookId, setActiveBookId] = useState<string | null>(null);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const { data, loading, error, fetchMore } = useQuery<BooksQuery, BooksQueryVariables>(BOOKS_QUERY, {
@@ -59,7 +60,7 @@ export function BookList() {
       </div>
 
       <aside>
-        {activeBook ? <DiscussionChat bookId={activeBook.id} title={activeBook.title} /> : null}
+        {activeBook ? <DiscussionChat bookId={activeBook.id} title={activeBook.title} authUser={authUser} /> : null}
         <div className="recommendations">
           <h2>Lazy recommendations</h2>
           <p className="hint">Loaded through a deferred GraphQL fragment when the server supports incremental delivery.</p>

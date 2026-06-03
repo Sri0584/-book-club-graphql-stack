@@ -279,6 +279,16 @@ export type LoginMutation = {
   login: { __typename?: 'AuthPayload'; token: string; user: { __typename?: 'User'; id: string; name: string; email: string } };
 };
 
+
+export type RegisterMutationVariables = Exact<{
+  input: RegisterInput;
+}>;
+
+export type RegisterMutation = {
+  __typename?: 'Mutation';
+  register: { __typename?: 'AuthPayload'; token: string; user: { __typename?: 'User'; id: string; name: string; email: string } };
+};
+
 export type CreateBookMutationVariables = Exact<{
   input: CreateBookInput;
 }>;

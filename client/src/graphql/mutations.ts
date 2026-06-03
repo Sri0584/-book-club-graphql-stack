@@ -14,6 +14,19 @@ export const LOGIN_MUTATION = gql`
   }
 `;
 
+export const REGISTER_MUTATION = gql`
+  mutation Register($input: RegisterInput!) {
+    register(input: $input) {
+      token
+      user {
+        id
+        name
+        email
+      }
+    }
+  }
+`;
+
 export const CREATE_BOOK_MUTATION = gql`
   mutation CreateBook($input: CreateBookInput!) {
     createBook(input: $input) {

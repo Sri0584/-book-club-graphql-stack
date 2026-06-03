@@ -11,8 +11,9 @@ import type {
   SendChatMessageMutation,
   SendChatMessageMutationVariables
 } from '../graphql/generated';
+import type { AuthUser } from './AuthPanel';
 
-export function DiscussionChat({ bookId, title }: { bookId: string; title: string }) {
+export function DiscussionChat({ bookId, title, authUser }: { bookId: string; title: string; authUser: AuthUser | null }) {
   const [message, setMessage] = useState('');
   const { data, error, subscribeToMore } = useQuery<ChatMessagesQuery, ChatMessagesQueryVariables>(CHAT_MESSAGES_QUERY, {
     variables: { bookId, first: 20, after: null }
@@ -38,7 +39,7 @@ export function DiscussionChat({ bookId, title }: { bookId: string; title: strin
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    if (!message.trim()) return;
+    if (!authUser || !message.trim()) return;
     await sendChatMessage({ variables: { input: { bookId, message: message.trim() } } });
     setMessage('');
   }
@@ -56,10 +57,14 @@ export function DiscussionChat({ bookId, title }: { bookId: string; title: strin
           </div>
         ))}
       </div>
-      <form onSubmit={handleSubmit} className="chat-form">
-        <input value={message} onChange={(event) => setMessage(event.target.value)} placeholder="Send a discussion message" />
-        <button disabled={loading}>{loading ? 'Sending…' : 'Send'}</button>
-      </form>
+      {authUser ? (
+        <form onSubmit={handleSubmit} className="chat-form">
+          <input value={message} onChange={(event) => setMessage(event.target.value)} placeholder={`Send as ${authUser.name}`} />
+          <button disabled={loading}>{loading ? 'Sending…' : 'Send'}</button>
+        </form>
+      ) : (
+        <p className="chat-auth-notice">Sign in above to send chat messages.</p>
+      )}
     </div>
   );
 }
